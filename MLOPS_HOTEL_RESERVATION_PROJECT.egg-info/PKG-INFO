@@ -1,0 +1,8 @@
+Metadata-Version: 2.4
+Name: MLOPS_HOTEL_RESERVATION_PROJECT
+Version: 0.1
+Author: oluchi
+Requires-Dist: pandas
+Requires-Dist: numpy
+Dynamic: author
+Dynamic: requires-dist
