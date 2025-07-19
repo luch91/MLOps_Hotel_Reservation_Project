@@ -1,3 +1,9 @@
+mlop_env/
+mlruns/
+logs/
+MLOps_Hotel_Reservation_Project\MLOPS_HOTEL_RESERVATION_PROJECT.egg-info
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
