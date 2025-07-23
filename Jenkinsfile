@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment{
+        VENV_DIR ='mlop_env'
+    }
+
     stages {
         stage('Cloning GitHub repo to Jenkins workspace') {
             steps {
@@ -15,6 +19,19 @@ pipeline {
                         credentialsId: 'github-token'
                     ]]
                 ])
+            }
+
+        stage('Setting up Virtual Environment and Installing Dependencies') {
+            steps {
+                
+                echo 'Setting up Virtual Environment and Installing Dependencies ....'
+                sh '''
+                python -m venv ${VENV_DIR}
+                . ${VENV_DIR}/bin/activate
+
+                pip install --upgrade pip
+                pip install -e .
+                '''
             }
         }
     }
