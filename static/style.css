@@ -1,82 +1,113 @@
+/* Reset default margin/padding */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f0f4f8;
-    margin: 0;
-    padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: url('hotel.png') no-repeat center center fixed;
+  background-size: cover;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
 }
 
 .container {
-    max-width: 600px;
-    margin: 50px auto;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9); /* semi-transparent overlay */
+  padding: 30px 25px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
 }
 
 h2 {
-    text-align: center;
-    color: #0a2540;
-    margin-bottom: 30px;
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #333;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
-label {
-    display: block;
-    margin-bottom: 8px;
-    color: #0a2540;
-    font-weight: 500;
+.form-group label {
+  font-size: 0.95rem;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
 }
 
-input[type="number"],
-select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ccd6dd;
-    border-radius: 8px;
-    background-color: #f9fbfd;
-    font-size: 16px;
-    transition: border-color 0.3s ease;
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background-color: #fff;
+  outline: none;
+  transition: border 0.3s ease;
 }
 
-input[type="number"]:focus,
-select:focus {
-    border-color: #1a73e8;
-    outline: none;
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #007bff;
 }
 
 button[type="submit"] {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    background-color: #1a73e8;
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  background-color: #007bff;
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 button[type="submit"]:hover {
-    background-color: #155ab6;
+  background-color: #0056b3;
 }
 
 .result {
-    margin-top: 30px;
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    font-size: 18px;
-    font-weight: 500;
-    color: #ffffff;
-    background-color: #0a8d48;
+  margin-top: 20px;
+  text-align: center;
+  font-weight: bold;
+  color: #333;
+  font-size: 1.1rem;
 }
 
-.result p {
-    margin: 0;
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .container {
+    padding: 20px 15px;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    font-size: 0.9rem;
+    padding: 9px 10px;
+  }
+
+  button[type="submit"] {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
 }
