@@ -2,14 +2,15 @@ pipeline {
     agent any
 
     environment {
-        VENV_DIR = 'mlop_env'
         GCP_PROJECT = 'utility-ridge-464015-n7'
-        GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin"
+        GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin/"
+        IMAGE_NAME = "mlops-hotel-reservation"
+        REGION = "us-central1"
     }
 
     stages {
 
-        stage('Clone GitHub Repository') {
+        stage('Clone Repository') {
             steps {
                 echo 'Cloning GitHub repository...'
                 checkout([
@@ -25,45 +26,35 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Run Training Pipeline') {
             steps {
-                echo 'Setting up virtual environment and installing dependencies...'
+                echo 'Running training pipeline in a temporary container...'
                 sh '''
-                    apt update && apt install -y python3 python3-pip python3-venv
-
-                    python3 -m venv ${VENV_DIR}
-
-                    if [ ! -f "${VENV_DIR}/bin/activate" ]; then
-                        echo "Virtual environment setup failed!"
-                        exit 1
-                    fi
-
-                    . ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
-
-                    if [ -f "requirements.txt" ]; then
-                        pip install -r requirements.txt
-                    else
-                        pip install -e .
-                    fi
+                    docker run --rm -v $PWD:/app -w /app python:3.10-slim bash -c "
+                        apt-get update && apt-get install -y git libgomp1 &&
+                        pip install --no-cache-dir -e . &&
+                        python pipeline/training_pipeline.py
+                    "
                 '''
             }
         }
 
-        stage('Build Docker Image & Push to GCR') {
+        stage('Build & Push Docker Image') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    echo 'Building Docker image and pushing to Google Container Registry...'
-                    sh '''
-                        export PATH=$PATH:${GCLOUD_PATH}
+                    script {
+                        echo 'Building Docker image and pushing to Google Container Registry (GCR)...'
+                        sh '''
+                            export PATH=$PATH:${GCLOUD_PATH}
 
-                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-                        gcloud config set project ${GCP_PROJECT}
-                        gcloud auth configure-docker --quiet
+                            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            gcloud config set project ${GCP_PROJECT}
+                            gcloud auth configure-docker --quiet
 
-                        docker build -t gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest .
-                        docker push gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest
-                    '''
+                            docker build -t gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest .
+                            docker push gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest
+                        '''
+                    }
                 }
             }
         }
@@ -71,30 +62,23 @@ pipeline {
         stage('Deploy to Google Cloud Run') {
             steps {
                 withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    echo 'Deploying to Google Cloud Run...'
-                    sh '''
-                        export PATH=$PATH:${GCLOUD_PATH}
+                    script {
+                        echo 'Deploying to Google Cloud Run...'
+                        sh '''
+                            export PATH=$PATH:${GCLOUD_PATH}
 
-                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
-                        gcloud config set project ${GCP_PROJECT}
+                            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            gcloud config set project ${GCP_PROJECT}
 
-                        gcloud run deploy mlops-hotel-reservation \
-                            --image gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest \
-                            --platform managed \
-                            --region us-central1 \
-                            --allow-unauthenticated
-                    '''
+                            gcloud run deploy ${IMAGE_NAME} \
+                                --image gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:latest \
+                                --platform managed \
+                                --region ${REGION} \
+                                --allow-unauthenticated
+                        '''
+                    }
                 }
             }
-        }
-    }
-
-    post {
-        failure {
-            echo 'Pipeline failed. Please check the logs for details.'
-        }
-        success {
-            echo 'Pipeline completed successfully!'
         }
     }
 }
