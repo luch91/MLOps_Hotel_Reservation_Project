@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         VENV_DIR = 'mlop_env'
-        GCP_PROJECT ='utility-ridge-464015-n7'
+        GCP_PROJECT = 'utility-ridge-464015-n7'
         GCLOUD_PATH = "/var/jenkins_home/google-cloud-sdk/bin/"
     }
 
@@ -28,60 +28,53 @@ pipeline {
             steps {
                 echo 'Setting up Virtual Environment and Installing Dependencies ....'
                 sh '''
-                    python -m venv ${VENV_DIR}
+                    python3 -m venv ${VENV_DIR}
                     . ${VENV_DIR}/bin/activate
-                    pip install --upgrade pip
-                    pip install -e .
+                    pip3 install --upgrade pip
+                    pip3 install -e .
                 '''
             }
         }
 
         stage('Building Docker Image and Pushing to GCR') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS' )]){
-                    script{
+                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    script {
                         echo 'Building Docker Image and Pushing to GCR...'
                         sh '''
-                        export PATH=$PATH:${GCLOUD_PATH}
+                            export PATH=$PATH:${GCLOUD_PATH}
 
-                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            gcloud config set project ${GCP_PROJECT}
+                            gcloud auth configure-docker --quiet
 
-                        gcloud config set project ${GCP_PROJECT}
-
-                        gcloud auth configure-docker --quiet
-
-                        docker build -t gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest .
-
-                        docker push gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest
+                            docker build -t gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest .
+                            docker push gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest
                         '''
                     }
                 }
-                
             }
         }
 
         stage('Deploying to Google Cloud Run') {
             steps {
-                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS' )]){
-                    script{
+                withCredentials([file(credentialsId: 'gcp-key', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    script {
                         echo 'Deploying to Google Cloud Run...'
                         sh '''
-                        export PATH=$PATH:${GCLOUD_PATH}
-                        
-                        gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            export PATH=$PATH:${GCLOUD_PATH}
+                            
+                            gcloud auth activate-service-account --key-file=${GOOGLE_APPLICATION_CREDENTIALS}
+                            gcloud config set project ${GCP_PROJECT}
 
-                        gcloud config set project ${GCP_PROJECT}
-
-                        gcloud run deploy mlops-hotel-reservation \
-                            --image gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest \
-                            --platform managed \
-                            --region us-central1 \
-                            --allow-unauthenticated \
-
+                            gcloud run deploy mlops-hotel-reservation \
+                                --image gcr.io/${GCP_PROJECT}/mlops-hotel-reservation:latest \
+                                --platform managed \
+                                --region us-central1 \
+                                --allow-unauthenticated
                         '''
                     }
                 }
-                
             }
         }
     }

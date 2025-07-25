@@ -1,4 +1,3 @@
-
 # Use the Jenkins image as the base image
 FROM jenkins/jenkins:lts
 
@@ -12,6 +11,11 @@ RUN apt-get update -y && \
     echo "deb [arch=amd64] https://download.docker.com/linux/debian bullseye stable" > /etc/apt/sources.list.d/docker.list && \
     apt-get update -y && \
     apt-get install -y docker-ce docker-ce-cli containerd.io && \
+    apt-get clean
+
+# ✅ Install Python, venv, and pip
+RUN apt-get update -y && \
+    apt-get install -y python3 python3-venv python3-pip && \
     apt-get clean
 
 # Add Jenkins user to the Docker group (create if it doesn't exist)
